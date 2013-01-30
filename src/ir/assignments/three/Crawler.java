@@ -10,10 +10,14 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.google.gson.Gson;
@@ -54,13 +58,14 @@ public class Crawler extends WebCrawler {
 			try {
 				stopwords = Utilities.tokenizeFile(new File("stopwords.rtf"));
 				stopwordsFreq = WordFrequencyCounter.computeWordFrequencies(stopwords);
+				 new File(PAGES_FOLDER).mkdirs();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				System.exit(0);
 			}
 		}
-		
+		private static Set<String> hrefSet = new HashSet<String>() ;
 		public static AttributesPage maxLengthPage = new AttributesPage();
 		public static int maxLength=0;
         private final static Pattern FILTERS = Pattern.compile(".*(\\.(css|js|bmp|gif|jpe?g" + "|png|tiff?|mid|mp2|mp3|mp4"
@@ -73,7 +78,15 @@ public class Crawler extends WebCrawler {
         @Override
         public boolean shouldVisit(WebURL url) {
                 String href = url.getURL().toLowerCase();
-                return !FILTERS.matcher(href).matches() && href.contains("ics.uci.edu");
+                if(href.indexOf("?")!=-1){
+                	href = href.split("[?]")[0];
+                }
+                if(!hrefSet.contains(href)){
+                	hrefSet.add(href);
+                	return !FILTERS.matcher(href).matches() && href.contains("calendar.ics.uci.edu");
+                }
+                return false;
+                
         }
 
         /**
@@ -130,7 +143,13 @@ public class Crawler extends WebCrawler {
                 // get top 500 words of this page.
                 printToFile(attributesPage);
                 Gson gson = new Gson();
-                appendStringToFile(gson.toJson(page),PAGES_FOLDER+System.getProperty("file.separator")+url+".txt");
+               
+                try {
+					appendStringToFile(gson.toJson(page),PAGES_FOLDER+System.getProperty("file.separator")+URLEncoder.encode(url,"ISO-8859-1")+".txt");
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
                 System.out.println("=============");
         }
         

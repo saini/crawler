@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -52,7 +53,10 @@ public class BasicCrawlController {
 		private static Logger logger = Logger.getLogger(BasicCrawlController.class.getName());
 		private static Map<String, Set<String>> subdoaminToPageCountMap = new HashMap<String,Set<String>>();
 		//private static List<Frequency> top500WordsList = new LinkedList<Frequency>();
+		private static Set<String> uniqueURLSet = new HashSet<String>();
 		private static Map<String,Frequency> top500WordsMap = new HashMap<String,Frequency>();
+		private static Map<String,Frequency> top20_2Grams = new HashMap<String,Frequency>();
+		
 		public static void main(String[] args) throws Exception {
         	logger.info("starting the main");
                 if (args.length != 2) {
@@ -88,13 +92,13 @@ public class BasicCrawlController {
                  * You can set the maximum crawl depth here. The default value is -1 for
                  * unlimited depth
                  */
-                config.setMaxDepthOfCrawling(2);
+                config.setMaxDepthOfCrawling(-1);
 
                 /*
                  * You can set the maximum number of pages to crawl. The default value
                  * is -1 for unlimited number of pages
                  */
-                config.setMaxPagesToFetch(1000);
+                config.setMaxPagesToFetch(-1);
 
                 /*
                  * Do you need to set a proxy? If so, you can use:
@@ -131,7 +135,7 @@ public class BasicCrawlController {
                  * which are found in these pages
                  */
 
-                controller.addSeed("http://www.ics.uci.edu/");
+                controller.addSeed("http://calendar.ics.uci.edu/calendar.php");
                 /*
                  * Start the crawl. This is a blocking operation, meaning that your code
                  * will reach the line after this only when crawling is finished.
@@ -140,6 +144,7 @@ public class BasicCrawlController {
                 controller.start(Crawler.class, numberOfCrawlers);
                 long t2 = System.currentTimeMillis();
                 System.out.println("crawling ends, total time taken "+ (t2-t1));
+                Crawler.appendStringToFile("1) Time taken to crawl the entire domain"+ (t2-t1) +" milliseconds.", "answers.txt");
                 Gson gson = new Gson();
                 System.out.println(gson.toJson(Crawler.maxLengthPage));
                 main2(args);
@@ -150,13 +155,17 @@ public class BasicCrawlController {
 			readFile(new File(Crawler.CRAWLER_JSON_FILE));
 			Gson gson = new Gson();
 			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), "subdomain-info.txt");
-			List<Frequency> values = new ArrayList<Frequency>( top500WordsMap.values());
-			Collections.sort(values);
-			Collections.reverse(values);
-			Crawler.appendStringToFile(gson.toJson(values.subList(0, 500)), "top500wordsMap-json.txt");
+			
+			
+			//Answers
+			Crawler.appendStringToFile("2) Unique pages in ics.uci.edu : "+ uniqueURLSet.size(), "answers.txt");
+			printSubDomains(); // 3rd Answer
+			Crawler.appendStringToFile("4) Longest page URL: "+Crawler.maxLengthPage.getUrl(), "answers.txt");
+            printTop500Words(); // 5th Answer
+            printTop20_2Grams(); // 6th Answer
 		}
-        
-        private static void readFile(File file){
+
+		private static void readFile(File file){
         	BufferedReader br = null;
         	try {
 				br = new BufferedReader(
@@ -187,8 +196,8 @@ public class BasicCrawlController {
         	AttributesPage attributesPage = gson.fromJson(json, AttributesPage.class);
         	populateSubdomainMap(attributesPage);
         	getTop500Words(attributesPage);
-        	
-        	
+        	getTop20_2Grams(attributesPage);
+        	populateUniqueUrlSet(attributesPage);
         }
         
         private static void populateSubdomainMap(AttributesPage attributesPage){
@@ -214,4 +223,59 @@ public class BasicCrawlController {
         		}
         	}
         }
+        
+        private static void getTop20_2Grams(AttributesPage attributesPage){
+        	for(Frequency freq : attributesPage.getTop20TwoGrams()){
+        		String word = freq.getText();
+        		if(top20_2Grams.containsKey(word)){
+        			Frequency frequency = top20_2Grams.get(word);
+        			frequency.setFrequency(frequency.getFrequency()+freq.getFrequency());
+        		}else{
+        			Frequency frequency = new Frequency(word,freq.getFrequency());
+        			top20_2Grams.put(word,frequency);
+        		}
+        	}
+        }
+        
+        /**
+         * populate the unique urls into the private set.
+         * @param attributesPage
+         */
+        private static void populateUniqueUrlSet(AttributesPage attributesPage){
+        	uniqueURLSet.add(attributesPage.getUrl());
+        }
+        
+        private static void printSubDomains()
+        {
+        	Set<Entry<String,Set<String> >> subDomainPageCountset = subdoaminToPageCountMap.entrySet();
+        	for(Entry<String,Set<String>> entry: subDomainPageCountset)
+        	{
+        		Crawler.appendStringToFile(entry.getKey()+"ics.uci.edu,"+entry.getValue().size(), "Subdomains.txt");
+        	}
+        }
+        
+        private static void printTop500Words()
+		{
+			List<Frequency> values = new ArrayList<Frequency>( top500WordsMap.values());
+			Collections.sort(values);
+			Collections.reverse(values);
+			for(Frequency freq:values.subList(0, Math.min(values.size(),500)))
+			{
+				Crawler.appendStringToFile(freq.toString(), "CommonWords.txt");
+			}
+//			Crawler.appendStringToFile(gson.toJson(values.subList(0, 500)), "top500wordsMap-json.txt");
+		}
+        
+        private static void printTop20_2Grams()
+		{
+			List<Frequency> values = new ArrayList<Frequency>( top20_2Grams.values());
+			Collections.sort(values);
+			Collections.reverse(values);
+			for(Frequency freq:values.subList(0, Math.min(values.size(),20)))
+			{
+				Crawler.appendStringToFile(freq.toString(), "Common2Grams .txt");
+			}
+//			Crawler.appendStringToFile(gson.toJson(values.subList(0, 29)), "top20_2Grams-json.txt");
+		}
+        
 }
