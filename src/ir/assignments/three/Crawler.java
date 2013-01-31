@@ -57,8 +57,8 @@ import edu.uci.ics.crawler4j.url.WebURL;
  */
 public class Crawler extends WebCrawler {
 	private static Logger logger = Logger.getLogger(Crawler.class);
-	private static List stopwords;
-	private static List stopwordsFreq;
+	private static List<String> stopwords;
+	private static List<Frequency> stopwordsFreq;
 	public static final String CRAWLER_JSON_FILE = "crawler.json.txt";
 	public static final String pageDelimiter = "**-**-**-**-**-**-**";
 	public static final String PAGES_FOLDER = "crawled_pages";
