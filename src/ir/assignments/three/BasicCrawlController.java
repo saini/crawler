@@ -27,10 +27,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,7 +48,7 @@ import edu.uci.ics.crawler4j.robotstxt.RobotstxtServer;
  * @author Yasser Ganjisaffar <lastname at gmail dot com>
  */
 public class BasicCrawlController {
-		private static Logger logger = Logger.getLogger(BasicCrawlController.class.getName());
+		private static Logger logger = Logger.getLogger(BasicCrawlController.class);
 		private static Map<String, Set<String>> subdoaminToPageCountMap = new HashMap<String,Set<String>>();
 		//private static List<Frequency> top500WordsList = new LinkedList<Frequency>();
 		private static Set<String> uniqueURLSet = new HashSet<String>();
@@ -92,13 +90,13 @@ public class BasicCrawlController {
                  * You can set the maximum crawl depth here. The default value is -1 for
                  * unlimited depth
                  */
-                config.setMaxDepthOfCrawling(-1);
+                config.setMaxDepthOfCrawling(2);
 
                 /*
                  * You can set the maximum number of pages to crawl. The default value
                  * is -1 for unlimited number of pages
                  */
-                config.setMaxPagesToFetch(-1);
+                config.setMaxPagesToFetch(1000);
 
                 /*
                  * Do you need to set a proxy? If so, you can use:
@@ -135,7 +133,7 @@ public class BasicCrawlController {
                  * which are found in these pages
                  */
 
-                controller.addSeed("http://calendar.ics.uci.edu/calendar.php");
+                controller.addSeed("http://www.ics.uci.edu");
                 /*
                  * Start the crawl. This is a blocking operation, meaning that your code
                  * will reach the line after this only when crawling is finished.
@@ -143,20 +141,18 @@ public class BasicCrawlController {
                 long t1 = System.currentTimeMillis();
                 controller.start(Crawler.class, numberOfCrawlers);
                 long t2 = System.currentTimeMillis();
-                System.out.println("crawling ends, total time taken "+ (t2-t1));
+                logger.info("crawling ends, total time taken "+ (t2-t1));
                 Crawler.appendStringToFile("1) Time taken to crawl the entire domain"+ (t2-t1) +" milliseconds.", "answers.txt");
                 Gson gson = new Gson();
                 System.out.println(gson.toJson(Crawler.maxLengthPage));
-                main2(args);
+                analyse();
                 logger.info("exiting main");
         }
 		
-		public static void main2 (String[] args){
+		public static void analyse (){
 			readFile(new File(Crawler.CRAWLER_JSON_FILE));
 			Gson gson = new Gson();
-			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), "subdomain-info.txt");
-			
-			
+			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), Crawler.LOGS_FOLDER+System.getProperty("file.separator")+"subdomain-info.txt");
 			//Answers
 			Crawler.appendStringToFile("2) Unique pages in ics.uci.edu : "+ uniqueURLSet.size(), "answers.txt");
 			printSubDomains(); // 3rd Answer
@@ -188,6 +184,13 @@ public class BasicCrawlController {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			}finally{
+				try {
+					br.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
         }
         
@@ -210,6 +213,8 @@ public class BasicCrawlController {
         		subdoaminToPageCountMap.put(attributesPage.getSubDomain(),urls);
         	}
         }
+        
+        
         
         private static void getTop500Words(AttributesPage attributesPage){
         	for(Frequency freq : attributesPage.getTop500Wrods()){
