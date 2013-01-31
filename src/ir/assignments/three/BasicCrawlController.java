@@ -152,7 +152,9 @@ public class BasicCrawlController {
 		public static void analyse (){
 			readFile(new File(Crawler.CRAWLER_JSON_FILE));
 			Gson gson = new Gson();
-			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), Crawler.LOGS_FOLDER+System.getProperty("file.separator")+"subdomain-info.txt");
+			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), "subdomain-info.txt");
+			
+			
 			//Answers
 			Crawler.appendStringToFile("2) Unique pages in ics.uci.edu : "+ uniqueURLSet.size(), "answers.txt");
 			printSubDomains(); // 3rd Answer

@@ -62,16 +62,15 @@ public class Crawler extends WebCrawler {
 	public static final String CRAWLER_JSON_FILE = "crawler.json.txt";
 	public static final String pageDelimiter = "**-**-**-**-**-**-**";
 	public static final String PAGES_FOLDER = "crawled_pages";
-	public static final String LOGS_FOLDER = "logs";
 	public static String regexSubDomain;
 	public static Pattern pattern;
+	private static Set<String> noCrawlSet = new HashSet<String>();
 	static {
 		try {
 			stopwords = Utilities.tokenizeFile(new File("stopwords.rtf"));
 			stopwordsFreq = WordFrequencyCounter
 					.computeWordFrequencies(stopwords);
 			new File(PAGES_FOLDER).mkdirs();
-			new File(LOGS_FOLDER).mkdirs();
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -82,10 +81,11 @@ public class Crawler extends WebCrawler {
 		// String testString2 = "http://informatics.uci.edu"; // should not
 		// match
 		pattern = Pattern.compile(regexSubDomain);
+		setTimer();
 	}
 	private static Set<String> hrefSet = new HashSet<String>();
 	private static Set<String> subDomainSet = new HashSet<String>();
-	private static Set<String> noCrawlSet = new HashSet<String>();
+	
 	public static AttributesPage maxLengthPage = new AttributesPage();
 	public static int maxLength = 0;
 	private final static Pattern FILTERS = Pattern
@@ -126,7 +126,7 @@ public class Crawler extends WebCrawler {
 		// add new sub domain to file. bookkeeping only
 		if (!subDomainSet.contains(subDomain)) {
 			subDomainSet.add(subDomain);
-			appendStringToFile(subDomain + "\n", LOGS_FOLDER+System.getProperty("file.separator")+"subdomainList.txt");
+			appendStringToFile(subDomain + "\n", "subdomainList.txt");
 		}
 		String parentUrl = page.getWebURL().getParentUrl();
 		logger.info("new page");
@@ -190,6 +190,7 @@ public class Crawler extends WebCrawler {
 	}
 
 	public static void setTimer() {
+		populateNoCrawlSet();
 		int delay = 1000; // millisec
 		int interval = 5 * 1000 * 60; // x*1000*60 = x mins
 		Timer timer = new Timer();
@@ -210,6 +211,7 @@ public class Crawler extends WebCrawler {
 			while (null != (line = br.readLine())) {
 				if (!noCrawlSet.contains(line.trim())) {
 					noCrawlSet.add(line.trim());
+					logger.info(line +" added to noCrawlset");
 				}
 			}
 		} catch (FileNotFoundException e) {
@@ -249,8 +251,8 @@ public class Crawler extends WebCrawler {
 	private void printToFile(AttributesPage attributesPage) {
 		Gson gson = new Gson();
 		String json = gson.toJson(attributesPage);
-		appendStringToFile(json,LOGS_FOLDER+System.getProperty("file.separator")+ CRAWLER_JSON_FILE);
-		appendStringToFile("\n" + pageDelimiter + "\n",LOGS_FOLDER+System.getProperty("file.separator")+ CRAWLER_JSON_FILE);
+		appendStringToFile(json, CRAWLER_JSON_FILE);
+		appendStringToFile("\n" + pageDelimiter + "\n", CRAWLER_JSON_FILE);
 	}
 
 	public static void appendStringToFile(String text, String filename) {
