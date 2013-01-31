@@ -17,9 +17,10 @@
     <tstamp/>
     <!-- Create the build directory structure used by compile -->
     <mkdir dir="${build}"/>
+  	<mkdir dir="${build}/lib"/>
   </target>
 
-  <target name="compile" depends="init"
+  <target name="compile" depends="copy"
         description="compile the source " >
     <!-- Compile the java code from ${src} into ${build} -->
     <javac srcdir="${src}" destdir="${build}" classpathref="lib.path"/>
@@ -43,4 +44,25 @@
   		file="crawler.json.txt"
   	/>
   </target>
+  
+	<target name="copy" description="copies required files to build folder" depends="init">
+		<copydir dest="${build}/lib" src="${lib}"></copydir>
+		<copy todir="${build}">
+			  <fileset dir="${basedir}">
+			    <exclude name="**/*.java"/>
+			  	<exclude name="**/*.log"/>
+			  	<include name="**/*.txt"/>
+			    <include name="**/*.rtf"/>
+			  	<include name="**/*.sh"/>
+			  	<exclude name="**/crawled_pages/**"/>
+			  </fileset>
+		</copy>
+		<copy todir="${build}" flatten="true">
+			  <fileset dir="${src}">
+			  	<include name="*"/>
+			  </fileset>
+		</copy>
+		
+	</target>
+		
 </project>

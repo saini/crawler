@@ -92,7 +92,8 @@ public class Crawler extends WebCrawler {
 			.compile(".*(\\.(css|js|bmp|gif|jpe?g"
 					+ "|png|tiff?|mid|mp2|mp3|mp4"
 					+ "|wav|avi|mov|mpeg|ram|m4v|pdf"
-					+ "|rm|smil|wmv|swf|wma|zip|rar|gz))$");
+					+ "|rm|smil|wmv|swf|wma|zip|rar|gz|icsgz|tar" +
+					"|exe|doc|ppt|mpg|tif|psd|xls|ps|tgz|7z|iso))$");
 
 	/**
 	 * You should implement this function to specify whether the given url
