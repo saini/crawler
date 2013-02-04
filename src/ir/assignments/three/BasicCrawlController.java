@@ -118,7 +118,8 @@ public class BasicCrawlController {
                 
                 // set useragent string.
                 config.setUserAgentString("UCI IR crawler 12087590, 19162716");
-
+                config.setConnectionTimeout(3000); // 3000 millisec, 3sec.
+                config.setSocketTimeout(3000);
                 /*
                  * Instantiate the controller for this crawl.
                  */
@@ -133,7 +134,8 @@ public class BasicCrawlController {
                  * which are found in these pages
                  */
 
-                controller.addSeed("http://www.ics.uci.edu");
+                controller.addSeed("http://ftp.ics.uci.edu/pub");
+              
                 /*
                  * Start the crawl. This is a blocking operation, meaning that your code
                  * will reach the line after this only when crawling is finished.
@@ -145,25 +147,32 @@ public class BasicCrawlController {
                 Crawler.appendStringToFile("1) Time taken to crawl the entire domain"+ (t2-t1) +" milliseconds.", "answers.txt");
                 Gson gson = new Gson();
                 System.out.println(gson.toJson(Crawler.maxLengthPage));
-                analyse();
+                //analyse();
                 logger.info("exiting main");
         }
 		
-		public static void analyse (){
+		public static void main2 (String[] args){
 			readFile(new File(Crawler.CRAWLER_JSON_FILE));
 			Gson gson = new Gson();
-			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), "subdomain-info.txt");
 			
+			Crawler.appendStringToFile(gson.toJson(subdoaminToPageCountMap), "subdomain-info.txt");
+			logger.info("subdomain-info.txt populated");
 			
 			//Answers
 			Crawler.appendStringToFile("2) Unique pages in ics.uci.edu : "+ uniqueURLSet.size(), "answers.txt");
+			logger.info("answer to 2 is printed");
 			printSubDomains(); // 3rd Answer
+			logger.info("answer to 3 is printed");
 			Crawler.appendStringToFile("4) Longest page URL: "+Crawler.maxLengthPage.getUrl(), "answers.txt");
-            printTop500Words(); // 5th Answer
+			logger.info("answer to 4 is printed");
+			printTop500Words(); // 5th Answer
+			logger.info("answer to 5 is printed");
             printTop20_2Grams(); // 6th Answer
+            logger.info("answer to 6 is printed");
 		}
 
 		private static void readFile(File file){
+			logger.info("reading file: "+ file.getName());
         	BufferedReader br = null;
         	try {
 				br = new BufferedReader(

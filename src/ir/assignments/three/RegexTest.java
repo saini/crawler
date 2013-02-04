@@ -7,7 +7,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,12 +22,17 @@ import com.google.gson.Gson;
 public class RegexTest {
 	private static Set<String> noCrawlSet = new HashSet<String>();
 	public RegexTest(){
-		System.out.println(isValidUrl("http://archive.ics.uci.edu/"));
+		System.out.println(isValidUrl("http://ftp.ics.uci.edu/dsfsdf"));
+		//System.out.println(getCleanWord("father?"));
 	}
 	private boolean isValidUrl(String input){
 		String url = "archive.ics.uci";
-		return "archive.ics.uci".matches("^(http://)?"+url+".*");
-		/*String regexSubDomain = "^(http://)?(\\w+\\.)*ics.uci.edu";
+		if("http://ftp.ics.uci.edu/pub/adaptive/".indexOf("public_ftp")!=-1){
+			return false;
+		}
+		return true;
+		//return "archive.ics.uci".matches("^(http://)?"+url+".*");
+		/*String regexSubDomain = "^(http://ftp).ics.uci.edu";
 		String regexDomain = "^(http://)?ics.uci.edu";
 		//String testString = "http://ics.uci.edu"; // should match
 		//String testString2 = "http://informatics.uci.edu"; // should not match
@@ -46,7 +53,35 @@ public class RegexTest {
             }
          }, delay,interval);
    }
-	
+	public static List<String> getCleanWord(String str){
+		ArrayList<String> result = null;
+        try
+        {
+            result = new ArrayList<String>();
+            str = str.trim().toLowerCase();
+            StringBuffer strbuf = new StringBuffer();
+            for(int index = 0 ; index< str.length() ; index++)
+            {
+                char c = str.charAt(index);
+                if( ((c-'a')>=0 && (c-'a')<26)  || ((c-'0')>=0 && (c-'0')<=9 ) )
+                {
+                    strbuf.append(c);
+                }
+                else if(strbuf.length()>0)
+                {
+                    result.add(strbuf.toString());
+                     strbuf.setLength(0);
+                 }
+            }
+            if(strbuf.length()!=0){
+            	result.add(strbuf.toString());
+            }
+        }catch(Exception e)
+        {
+            System.out.println(e.toString());
+        }
+        return result;
+	}
 	
 	
       private static void populateNoCrawlSet(){

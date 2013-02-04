@@ -76,7 +76,7 @@ public class Crawler extends WebCrawler {
 			e.printStackTrace();
 			System.exit(0);
 		}
-		regexSubDomain = "^(http://)?(\\w+\\.)*ics.uci.edu";
+		regexSubDomain = "^(http://ftp).ics.uci.edu";
 		// String testString = "http://ics.uci.edu"; // should match
 		// String testString2 = "http://informatics.uci.edu"; // should not
 		// match
@@ -93,7 +93,10 @@ public class Crawler extends WebCrawler {
 					+ "|png|tiff?|mid|mp2|mp3|mp4"
 					+ "|wav|avi|mov|mpeg|ram|m4v|pdf"
 					+ "|rm|smil|wmv|swf|wma|zip|rar|gz|icsgz|tar" +
-					"|exe|doc|ppt|mpg|tif|psd|xls|ps|tgz|7z|iso))$");
+					"|exe|doc|ppt|mpg|tif|psd|xls|ps|tgz|7z|iso|tbz2" +
+					"|pfm|jar|xsd|vhdl|classpath|gitignore|npmignore|macros" +
+					"|mar|apk|cab|java|py|c|xml|h|cc|cpp|lisp|names|data|" +
+					"test|diff|yaml|sh|lif|reg|z|tiff|bin|hqx|rpm))$");
 
 	/**
 	 * You should implement this function to specify whether the given url
@@ -149,9 +152,9 @@ public class Crawler extends WebCrawler {
 			logger.info("Text length: " + text.length());
 			logger.info("Html length: " + html.length());
 			logger.info("Number of outgoing links: " + links.size());
-
+			List<String> cleanWords = WordFrequencyCounter.getCleanWord(text);
 			List<Frequency> freqList = WordFrequencyCounter
-					.computeWordFrequencies(Arrays.asList(text.split(" ")));
+					.computeWordFrequencies(cleanWords);
 			freqList.removeAll(stopwordsFreq);
 			int characterCount = 0;
 			for (Frequency frequency : freqList) {
@@ -159,15 +162,14 @@ public class Crawler extends WebCrawler {
 			}
 			attributesPage.setTop500Wrods(freqList);
 			List<Frequency> twoGramFreqList = TwoGramFrequencyCounter
-					.computeTwoGramFrequencies(new ArrayList<String>(Arrays
-							.asList(text.split(" "))));
+					.computeTwoGramFrequencies(new ArrayList<String>(cleanWords));
 			attributesPage.setTop20TwoGrams(twoGramFreqList);
 			attributesPage.setLength(characterCount);
 			if (maxLength < characterCount) {
 				maxLength = characterCount;
 				maxLengthPage = attributesPage;
 			}
-			htmlParseData.setHtml("");
+			//htmlParseData.setHtml("");
 			// attributesPage.setText(text);
 		}
 		// create object of AttributesPage
@@ -193,7 +195,7 @@ public class Crawler extends WebCrawler {
 	public static void setTimer() {
 		populateNoCrawlSet();
 		int delay = 1000; // millisec
-		int interval = 5 * 1000 * 60; // x*1000*60 = x mins
+		int interval = 1 * 1000 * 60; // x*1000*60 = x mins
 		Timer timer = new Timer();
 		timer.schedule(new TimerTask() {
 			public void run() {
@@ -236,6 +238,10 @@ public class Crawler extends WebCrawler {
 	 * @return
 	 */
 	private boolean isValidUrl(String input) {
+		final String public_ftp = "public_ftp";
+		if(input.indexOf(public_ftp)!=-1){
+			return false;
+		}
 		Iterator<String> it = noCrawlSet.iterator();
 		while(it.hasNext()){
 			String url = it.next();
